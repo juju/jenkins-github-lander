@@ -10,7 +10,9 @@ version = '0.1'
 
 install_requires = [
     'pyramid',
+    'pyramid_debugtoolbar',
     'requests',
+    'waitress',
 ]
 
 
@@ -33,10 +35,12 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
-    entry_points="""\
-        [paste.app_factory]
-        main = jenkinsgithublander.app:main
-        [console_scripts':
-            ['jenkins-github-lander=jenkinsgithublander:main']
-    """,
+    entry_points={
+        'paste.app_factory': [
+            'main = jenkinsgithublander.app:main'
+        ],
+        'console_scripts': [
+            'jenkins-github-lander=jenkinsgithublander:main'
+        ],
+    },
 )
