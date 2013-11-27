@@ -22,6 +22,10 @@ clean_venv:
 deps: venv
 	bin/pip install -r requirements.txt
 
+.PHONY: testdeps
+testdeps: venv
+	bin/pip install -r requirements.tests.txt
+
 lib/python*/site-packages/jenkins_github_lander.egg-link:
 	bin/python setup.py develop
 develop: venv lib/python*/site-packages/jenkins_github_lander.egg-link
@@ -36,3 +40,7 @@ clean_all: clean_venv
 run: develop
 	bin/pserve development.ini
 
+
+.PHONY: test
+test:
+	bin/nosetests -x -s src/

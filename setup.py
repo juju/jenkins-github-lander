@@ -15,6 +15,12 @@ install_requires = [
     'waitress',
 ]
 
+tests_require = [
+    'nose',
+    'mock',
+    'responses',
+]
+
 
 setup(
     name='jenkins-github-lander',
@@ -35,6 +41,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
+    tests_require=tests_require,
     entry_points={
         'paste.app_factory': [
             'main = jenkinsgithublander.app:main'
