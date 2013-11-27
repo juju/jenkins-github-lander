@@ -23,7 +23,7 @@ deps: venv
 	bin/pip install -r requirements.txt
 
 .PHONY: testdeps
-testdeps: venv
+testdeps: deps
 	bin/pip install -r requirements.tests.txt
 
 lib/python*/site-packages/jenkins_github_lander.egg-link:

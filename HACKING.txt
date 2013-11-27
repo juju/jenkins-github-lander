@@ -2,11 +2,27 @@ Development setup
 =================
 
 
+Running tests
+--------------
 
+    git clone ...
+    make testdeps
+    make develop
+    make test
+
+
+Running
+---------
+
+    make deps
+    make develop
+    make run
 
 
 Release HOWTO
 =============
+
+TBD
 
 To make a release,
 
