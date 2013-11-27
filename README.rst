@@ -27,9 +27,11 @@ Configuration
 Update the ini file used to launch the web service with the following
 configuration keys.
 
+
 ::
 
-    jenkins.merge.url = http://ci.jujusomething.com/job/juju-gui-merge/buildWithParameters
+    jenkins.merge.url = http://ci.jujusomething.com/job/{}/buildWithParameters
+    jenkins.merge.job = juju-gui-merge
     jenkins.merge.token = jenkinsbuildtoken
     jenkins.merge.trigger = $$merge$$
 
