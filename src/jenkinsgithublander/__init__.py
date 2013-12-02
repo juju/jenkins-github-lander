@@ -1,5 +1,3 @@
-# Example package with a console entry point
+import pkg_resources
 
-
-def main():
-    print "Hello World"
+VERSION = pkg_resources.get_distribution("jenkins-github-lander").version

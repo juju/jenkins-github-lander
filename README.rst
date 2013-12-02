@@ -17,8 +17,7 @@ Process
   merge job in jenkins.
 - If all tests pass, the jenkins server will ping back that this pull request
   is good and passes all tests.
-- This web service then triggers a merge via the Github api to land the
-  branch.
+- This web service then triggers a merge via the Github api to land the branch.
 
 
 Configuration
@@ -58,6 +57,10 @@ landing merge script vs ping'ing the web server with the url.
 
 Since this is time based, and it polls all open pull requests, the order of
 landing might not match the real order of comments on the pull requests.
+
+::
+
+    */3 * * * * cd /$path/to/service/venv/ && ./bin/lander-check-pulls --ini development.ini
 
 Running Manually
 ----------------
