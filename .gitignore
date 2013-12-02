@@ -12,3 +12,5 @@ dist
 include
 lib
 local
+
+development.ini

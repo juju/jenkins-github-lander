@@ -3,16 +3,20 @@ WD := $(shell pwd)
 PY := bin/python
 PIP := bin/pip
 
+INI = development.ini
 
 # #######
 # INSTALL
 # #######
 .PHONY: all
-all: venv
+all: venv deps develop
 
 venv: bin/python
 bin/python:
 	virtualenv .
+
+$(INI):
+	cp sample.ini $(INI)
 
 .PHONY: clean_venv
 clean_venv:
@@ -37,9 +41,8 @@ clean_all: clean_venv
     fi
 
 .PHONY: run
-run: develop
+run: develop $(INI)
 	bin/pserve development.ini
-
 
 .PHONY: test
 test:
