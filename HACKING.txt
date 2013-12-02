@@ -1,21 +1,20 @@
 Development setup
 =================
 
+    git clone https://github.com/juju/jenkins-github-lander.git
 
 Running tests
 --------------
 
-    git clone ...
+    make all
     make testdeps
-    make develop
     make test
 
 
 Running
 ---------
 
-    make deps
-    make develop
+    make all
     make run
 
 
