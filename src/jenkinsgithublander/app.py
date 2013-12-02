@@ -1,40 +1,14 @@
 from pyramid.config import Configurator
 from pyramid.response import Response
 
-from jenkinsgithublander.github import mergeable_pull_requests
-from jenkinsgithublander.github import GithubInfo
-from jenkinsgithublander.jenkins import JenkinsInfo
-from jenkinsgithublander.jenkins import kick_jenkins_merge
+from jenkinsgithublander.jobs import merge_pull_requests
 
 
 # Route callables
-
 def trigger_mergable_commits(request):
     config = request.registry.settings
-    mergable = mergeable_pull_requests(
-        config['jenkins.merge.trigger'],
-        GithubInfo(
-            config['github.owner'],
-            config['github.project'],
-            config['github.username'],
-            config['github.token'],
-        )
-    )
-
-    if mergable:
-        kicked = []
-        jenkins_info = JenkinsInfo(
-            config['jenkins.merge.url'],
-            config['jenkins.merge.job'],
-            config['jenkins.merge.token'],
-        )
-
-        for pr in mergable:
-            kick_jenkins_merge(pr['number'], pr['head']['sha'], jenkins_info)
-
-            kicked.append('Kicking pull request: {} at sha {}'.format(
-                pr['number'], pr['head']['sha']
-            ))
+    kicked = merge_pull_requests(config)
+    if kicked:
         ret = "\n".join(kicked)
     else:
         ret = "No pull requests to merge."
