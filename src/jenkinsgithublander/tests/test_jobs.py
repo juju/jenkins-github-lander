@@ -15,6 +15,15 @@ class TestJobs(TestCase):
     def test_merge_pull_request_kicker(self):
         # Fake out the data for the github requests.
         pulls = load_data('github-open-pulls.json')
+        orgs = load_data('github-user-orgs.json')
+        comments = load_data('github-pull-request-comments.json')
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/mitechie/orgs',
+            body=orgs,
+            status=200,
+            content_type='application/json'
+        )
         responses.add(
             responses.GET,
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls',
@@ -22,8 +31,6 @@ class TestJobs(TestCase):
             status=200,
             content_type='application/json'
         )
-
-        comments = load_data('github-pull-request-comments.json')
         responses.add(
             responses.GET,
             (
