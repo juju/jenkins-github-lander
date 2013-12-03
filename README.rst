@@ -1,4 +1,4 @@
-Jenking Github Lander
+Jenkins Github Lander
 ==========================
 
 Used to integrate Jenkins with Github to aid in auto landing branches that
