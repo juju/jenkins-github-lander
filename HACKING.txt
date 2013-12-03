@@ -1,0 +1,32 @@
+Development setup
+=================
+
+    git clone https://github.com/juju/jenkins-github-lander.git
+
+Running tests
+--------------
+
+    make all
+    make testdeps
+    make test
+
+
+Running
+---------
+
+    make all
+    make run
+
+
+Release HOWTO
+=============
+
+TBD
+
+To make a release,
+
+  1) Update release date/version in NEWS.txt and setup.py
+  2) Run 'python setup.py sdist'
+  3) Test the generated source distribution in dist/
+  4) Upload to PyPI: 'python setup.py sdist register upload'
+  5) Increase version in setup.py (for next release)

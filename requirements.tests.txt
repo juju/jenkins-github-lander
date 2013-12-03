@@ -1,0 +1,4 @@
+mock
+nose
+responses
+nose-selecttests

@@ -1,0 +1,32 @@
+[
+  {
+    "login": "CanonicalJS",
+    "id": 1969999,
+    "url": "https://api.github.com/orgs/CanonicalJS",
+    "repos_url": "https://api.github.com/orgs/CanonicalJS/repos",
+    "events_url": "https://api.github.com/orgs/CanonicalJS/events",
+    "members_url": "https://api.github.com/orgs/CanonicalJS/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/CanonicalJS/public_members{/member}",
+    "avatar_url": "https://0.gravatar.com/avatar/5d02a15967cb6388bd3873b6e3b1362a?d=https%3A%2F%2Fidenticons.github.com%2F435ba347d6ed2d688587903b8139cc79.png&r=x"
+  },
+  {
+    "login": "coffeehousecoders",
+    "id": 3318938,
+    "url": "https://api.github.com/orgs/coffeehousecoders",
+    "repos_url": "https://api.github.com/orgs/coffeehousecoders/repos",
+    "events_url": "https://api.github.com/orgs/coffeehousecoders/events",
+    "members_url": "https://api.github.com/orgs/coffeehousecoders/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/coffeehousecoders/public_members{/member}",
+    "avatar_url": "https://2.gravatar.com/avatar/1eb3723489b142b334bb12fcc77a4601?d=https%3A%2F%2Fidenticons.github.com%2F59ffa624be3e26035c3ca0d2de8568c2.png&r=x"
+  },
+  {
+    "login": "bookieio",
+    "id": 4212191,
+    "url": "https://api.github.com/orgs/bookieio",
+    "repos_url": "https://api.github.com/orgs/bookieio/repos",
+    "events_url": "https://api.github.com/orgs/bookieio/events",
+    "members_url": "https://api.github.com/orgs/bookieio/members{/member}",
+    "public_members_url": "https://api.github.com/orgs/bookieio/public_members{/member}",
+    "avatar_url": "https://2.gravatar.com/avatar/7423594cfd0acdbcae3b023aaf25287d?d=https%3A%2F%2Fidenticons.github.com%2F1c1203a343c14605295ec9885170ed3a.png&r=x"
+  }
+]

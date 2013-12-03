@@ -17,8 +17,7 @@ Process
   merge job in jenkins.
 - If all tests pass, the jenkins server will ping back that this pull request
   is good and passes all tests.
-- This web service then triggers a merge via the Github api to land the
-  branch.
+- This web service then triggers a merge via the Github api to land the branch.
 
 
 Configuration
@@ -27,9 +26,11 @@ Configuration
 Update the ini file used to launch the web service with the following
 configuration keys.
 
+
 ::
 
-    jenkins.merge.url = http://ci.jujusomething.com/job/juju-gui-merge/buildWithParameters
+    jenkins.merge.url = http://ci.jujusomething.com/job/{}/buildWithParameters
+    jenkins.merge.job = juju-gui-merge
     jenkins.merge.token = jenkinsbuildtoken
     jenkins.merge.trigger = $$merge$$
 
@@ -56,3 +57,23 @@ landing merge script vs ping'ing the web server with the url.
 
 Since this is time based, and it polls all open pull requests, the order of
 landing might not match the real order of comments on the pull requests.
+
+::
+
+    */3 * * * * cd /$path/to/service/venv/ && ./bin/lander-check-pulls --ini development.ini
+
+Running Manually
+----------------
+Currently the only way it works is to run manually. Copy the `sample.ini` file
+into `development.ini` and update the config for your jenkins/github
+configuration.
+
+Once set, you can `make run` to start the webserver and the url
+`/check_pulls` will become functional. If there are no pull requests that are
+mergable, it'll respond so, and if it does kick off a merge job, it will reply
+with the pull request id and the sha of the merge point.
+
+::
+
+    $ http://127.0.0.1:6543/check_pulls
+    Kicking pull request: 5 at sha 089635fe2be2341cdbb8a3be093523798b918430

@@ -1,0 +1,17 @@
+Mako==0.9.0
+MarkupSafe==0.18
+PasteDeploy==1.5.0
+Pygments==1.6
+WebOb==1.2.3
+argparse==1.2.1
+pyramid==1.5a2
+pyramid-debugtoolbar==1.0.9
+pyramid-mako==0.3.1
+repoze.lru==0.6
+requests==2.0.1
+translationstring==1.1
+venusian==1.0a8
+waitress==0.8.7
+wsgiref==0.1.2
+zope.deprecation==4.0.2
+zope.interface==4.0.5
