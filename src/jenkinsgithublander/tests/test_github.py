@@ -6,9 +6,10 @@ from unittest import TestCase
 from jenkinsgithublander import github
 from jenkinsgithublander.github import (
     get_open_pull_requests,
-    mergeable_pull_requests,
     GithubInfo,
     GithubError,
+    mergeable_pull_requests,
+    pull_request_kicked,
 )
 from jenkinsgithublander.tests.utils import load_data
 
@@ -183,6 +184,49 @@ class TestGithubHelpers(TestCase):
         self.assertEqual(0, len(mergeable))
 
     @responses.activate
+    def test_not_mergable_if_already_merging(self):
+        pulls = load_data('github-open-pulls.json')
+        orgs = load_data('github-user-orgs.json')
+        comments = load_data(
+            'github-pull-request-comments.json', load_json=True)
+
+        # Add the currently merging comment to the list of the pull request to
+        # verify it does not mark this as a mergable pull request then.
+        merging_comment = load_data(
+            'github-new-issue-comment.json', load_json=True)
+        comments.append(merging_comment)
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/mitechie/orgs',
+            body=orgs,
+            status=200,
+            content_type='application/json'
+        )
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls',
+            body=pulls,
+            status=200,
+            content_type='application/json'
+        )
+        responses.add(
+            responses.GET,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=json.dumps(comments),
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
+        mergeable = mergeable_pull_requests('$$merge$$', info)
+
+        self.assertEqual(0, len(mergeable))
+
+    @responses.activate
     def test_mergeable_pull_requests(self):
         pulls = load_data('github-open-pulls.json')
         orgs = load_data('github-user-orgs.json')
@@ -218,3 +262,25 @@ class TestGithubHelpers(TestCase):
 
         self.assertEqual(1, len(mergeable))
         self.assertEqual(5, mergeable[0]['number'])
+
+    @responses.activate
+    def test_pull_request_kicked(self):
+        new_comment = load_data('github-new-issue-comment.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request = pulls[0]
+
+        responses.add(
+            responses.POST,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=new_comment,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('juju', 'project', 'jujugui', None)
+        resp = pull_request_kicked(pull_request, 'http://jenkins/job/1', info)
+        comment = resp['body']
+        self.assertIn(github.MERGE_SCHEDULED, comment)

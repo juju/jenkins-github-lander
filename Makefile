@@ -1,7 +1,6 @@
 # Makefile to help automate tasks
 WD := $(shell pwd)
 PY := bin/python
-PIP := bin/pip
 
 INI = development.ini
 
@@ -47,3 +46,10 @@ run: develop $(INI)
 .PHONY: test
 test:
 	bin/nosetests -x -s src/
+
+bin/flake8:
+	bin/pip install flake8
+
+.PHONY: lint
+lint: bin/flake8
+	bin/flake8 src/jenkinsgithublander/

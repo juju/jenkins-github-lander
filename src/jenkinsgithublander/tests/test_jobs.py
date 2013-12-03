@@ -2,7 +2,6 @@ import mock
 import responses
 from unittest import TestCase
 
-from jenkinsgithublander import jobs
 from jenkinsgithublander.jobs import (
     merge_pull_requests,
 )
@@ -17,6 +16,8 @@ class TestJobs(TestCase):
         pulls = load_data('github-open-pulls.json')
         orgs = load_data('github-user-orgs.json')
         comments = load_data('github-pull-request-comments.json')
+        new_comment = load_data('github-new-issue-comment.json')
+
         responses.add(
             responses.GET,
             'https://api.github.com/users/mitechie/orgs',
@@ -41,6 +42,16 @@ class TestJobs(TestCase):
             status=200,
             content_type='application/json'
         )
+        responses.add(
+            responses.POST,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=new_comment,
+            status=200,
+            content_type='application/json'
+        )
 
         fake_config = {
             'github.owner': 'CanonicalJS',
@@ -53,8 +64,9 @@ class TestJobs(TestCase):
             'jenkins.merge.trigger': '$$merge$$',
         }
 
-        with mock.patch('jenkinsgithublander.jobs.kick_jenkins_merge') as mock_kicker:
+        with mock.patch('jenkinsgithublander.jobs.kick_jenkins_merge'):
             kicked = merge_pull_requests(fake_config)
 
         self.assertEqual(1, len(kicked))
-        self.assertTrue(kicked[0].startswith('Kicking pull request: 5 at sha '))
+        self.assertTrue(
+            kicked[0].startswith('Kicking pull request: 5 at sha '))
