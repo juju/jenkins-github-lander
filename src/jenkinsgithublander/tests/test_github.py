@@ -38,6 +38,38 @@ class TestGithubHelpers(TestCase):
             url)
 
     @responses.activate
+    def test_user_is_not_in_org(self):
+        user_orgs = load_data('github-user-orgs.json')
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/jujugui/orgs',
+            body=user_orgs,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('juju', 'gui', 'jujugui', '1234')
+        in_org = github.user_is_in_org('jujugui', 'noexist', info)
+
+        self.assertFalse(in_org)
+
+    @responses.activate
+    def test_user_is_in_org(self):
+        user_orgs = load_data('github-user-orgs.json')
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/jujugui/orgs',
+            body=user_orgs,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('juju', 'gui', 'jujugui', '1234')
+        in_org = github.user_is_in_org('jujugui', 'CanonicalJS', info)
+
+        self.assertTrue(in_org)
+
+    @responses.activate
     def test_open_pull_requests_error(self):
         """Verify a non-200 throws an error"""
         responses.add(
@@ -109,8 +141,22 @@ class TestGithubHelpers(TestCase):
         self.assertEqual(0, len(mergeable))
 
     @responses.activate
-    def test_mergeable_pull_requests(self):
+    def test_not_mergeable_if_not_in_org(self):
         pulls = load_data('github-open-pulls.json')
+        orgs = load_data('github-user-orgs.json', load_json=True)
+        comments = load_data('github-pull-request-comments.json')
+
+        # Remove the CanonicalJS group so that the user fails to be in the
+        #org.
+        orgs.pop(0)
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/mitechie/orgs',
+            body=json.dumps(orgs),
+            status=200,
+            content_type='application/json'
+        )
 
         responses.add(
             responses.GET,
@@ -120,7 +166,6 @@ class TestGithubHelpers(TestCase):
             content_type='application/json'
         )
 
-        comments = load_data('github-pull-request-comments.json')
         responses.add(
             responses.GET,
             (
@@ -133,6 +178,42 @@ class TestGithubHelpers(TestCase):
         )
 
         info = GithubInfo('juju', 'project', 'jujugui', None)
+        mergeable = mergeable_pull_requests('$$merge$$', info)
+
+        self.assertEqual(0, len(mergeable))
+
+    @responses.activate
+    def test_mergeable_pull_requests(self):
+        pulls = load_data('github-open-pulls.json')
+        orgs = load_data('github-user-orgs.json')
+        comments = load_data('github-pull-request-comments.json')
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/users/mitechie/orgs',
+            body=orgs,
+            status=200,
+            content_type='application/json'
+        )
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls',
+            body=pulls,
+            status=200,
+            content_type='application/json'
+        )
+        responses.add(
+            responses.GET,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=comments,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
         mergeable = mergeable_pull_requests('$$merge$$', info)
 
         self.assertEqual(1, len(mergeable))
