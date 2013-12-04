@@ -1,13 +1,13 @@
 from pyramid.config import Configurator
 from pyramid.response import Response
 
-from jenkinsgithublander.jobs import merge_pull_requests
+from jenkinsgithublander.jobs import kick_mergeable_pull_requests
 
 
 # Route callables
 def trigger_mergable_commits(request):
     config = request.registry.settings
-    kicked = merge_pull_requests(config)
+    kicked = kick_mergeable_pull_requests(config)
     if kicked:
         ret = "\n".join(kicked)
     else:

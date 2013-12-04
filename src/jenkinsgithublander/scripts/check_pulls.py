@@ -3,20 +3,18 @@ from ConfigParser import ConfigParser
 from os import path
 
 from jenkinsgithublander import VERSION
-from jenkinsgithublander.jobs import merge_pull_requests
+from jenkinsgithublander.jobs import kick_mergeable_pull_requests
 
 
 def parse_args():
     """Handle building what we want to do based on the arguments.
 
     Examples:
-        api.py invites list
-        api.py invites set -u username -c 10
-        api.py accounts list --inactive
-        api.py readable list --todo
+        check_pulls.py --version
+        check_pulls.py --ini development.ini
 
     """
-    desc = """Command line client for the Bookie bookmark service.
+    desc = """Check for pull requests ready for building and merging.
 
     """
     parser = argparse.ArgumentParser(description=desc)
@@ -47,7 +45,7 @@ def parse_config(ini):
 
 
 def run(args, config):
-    kicked = merge_pull_requests(config)
+    kicked = kick_mergeable_pull_requests(config)
     if kicked:
         ret = "\n".join(kicked)
     else:

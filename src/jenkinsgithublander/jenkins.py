@@ -12,9 +12,19 @@ class JenkinsError(Exception):
     pass
 
 
+def generate_build_url(number, config):
+    url = config.url.format(config.job)
+    url = url + '/{0}'.format(number)
+    return url
+
+
+def generate_job_url(config):
+    return config.url.format(config.job)
+
+
 def kick_jenkins_merge(pr_id, git_sha, jenkins_info):
     """Trigger a merge build for the pull request specified"""
-    url = jenkins_info.url.format(jenkins_info.job)
+    url = generate_job_url(jenkins_info)
     request_data = {
         'pr': pr_id,
         'sha1': git_sha,

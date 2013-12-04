@@ -8,7 +8,9 @@ from jenkinsgithublander.github import (
     get_open_pull_requests,
     GithubInfo,
     GithubError,
+    merge_pull_request,
     mergeable_pull_requests,
+    pull_request_build_failed,
     pull_request_kicked,
 )
 from jenkinsgithublander.tests.utils import load_data
@@ -262,6 +264,100 @@ class TestGithubHelpers(TestCase):
 
         self.assertEqual(1, len(mergeable))
         self.assertEqual(5, mergeable[0]['number'])
+
+    @responses.activate
+    def test_merge_pull_request(self):
+        merge_response = load_data('github-merge-success.json')
+
+        responses.add(
+            responses.PUT,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4/merge',
+            body=merge_response,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
+        result = merge_pull_request(
+            4,
+            'http://jenkins.com/job/gui/12',
+            info
+        )
+
+        self.assertEqual(True, result['merged'])
+        self.assertEqual("Pull Request successfully merged", result['message'])
+
+    @responses.activate
+    def test_merge_pull_request_fails(self):
+        merge_response = load_data('github-merge-failed.json')
+
+        responses.add(
+            responses.PUT,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4/merge',
+            body=merge_response,
+            status=405,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
+        result = merge_pull_request(
+            4,
+            'http://jenkins.com/job/gui/12',
+            info
+        )
+
+        self.assertEqual(False, result['merged'])
+        self.assertEqual("Failure reason", result['message'])
+
+    @responses.activate
+    def test_merge_pull_request_fail_unplanned(self):
+        """Still throws exception on expected request failure."""
+        responses.add(
+            responses.PUT,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4/merge',
+            body='Not Found',
+            status=404,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
+
+        self.assertRaises(
+            GithubError,
+            merge_pull_request,
+            4,
+            'http://jenkins.com/job/gui/12',
+            info
+        )
+
+    @responses.activate
+    def test_pull_request_build_failed(self):
+        """Adds a comment to the pull request about the failure."""
+        new_comment = load_data('github-new-issue-comment.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request = pulls[0]
+
+        responses.add(
+            responses.POST,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=new_comment,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', '1234')
+
+        result = pull_request_build_failed(
+            pull_request,
+            'http://jenkins.com/job/gui/12',
+            'Failure message',
+            info
+        )
+
+        self.assertTrue('body' in result)
 
     @responses.activate
     def test_pull_request_kicked(self):
