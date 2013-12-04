@@ -67,7 +67,7 @@ def _is_mergeable(comments, owner, trigger, request_info):
 
 def _json_resp(response):
     """Given a response, return the json of the resp and check for errors."""
-    if response.status_code == 200:
+    if str(response.status_code).startswith('20'):
         return response.json()
     else:
         raise GithubError(response.content)
@@ -124,10 +124,17 @@ def mergeable_pull_requests(trigger_word, request_info):
 def merge_pull_request(pr_number, jenkins_url, request_info):
     """Given a passing build, trigger a merge on this pull request."""
     merge_url = "/repos/{owner}/{project}/pulls/{pr_number}/merge"
+    pr = get_pull_request(pr_number, request_info)
     url = _build_url(merge_url, request_info, {
         'pr_number': pr_number
     })
-    resp = requests.put(url)
+    resp = requests.put(
+        url,
+        data=json.dumps({
+            'commit_message': pr['body']
+        })
+    )
+
     try:
         return _json_resp(resp)
     except GithubError as exc:
@@ -153,9 +160,9 @@ def pull_request_build_failed(pr, build_url, failure_message, request_info):
     return _json_resp(
         requests.post(
             url,
-            data={
+            data=json.dumps({
                 'body': dedent(comment_body)
-            }
+            })
         )
     )
 
@@ -171,9 +178,9 @@ def pull_request_kicked(pr, jenkins_url, request_info):
     return _json_resp(
         requests.post(
             url,
-            data={
+            data=json.dumps({
                 'body': comment_body
-            }
+            })
         )
     )
 
