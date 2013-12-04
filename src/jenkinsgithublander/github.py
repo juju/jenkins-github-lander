@@ -1,6 +1,8 @@
 """Helpers for interacting with Github api requests."""
 from collections import namedtuple
+import json
 import requests
+from textwrap import dedent
 
 
 API_URL = 'https://api.github.com'
@@ -15,8 +17,10 @@ class GithubError(Exception):
     pass
 
 
-def _build_url(route, request_info):
+def _build_url(route, request_info, extra_info=None):
     dict_request_info = dict(zip(request_info._fields, request_info))
+    if extra_info:
+        dict_request_info.update(extra_info)
 
     if not route.startswith('http'):
         route = API_URL + route
@@ -81,6 +85,15 @@ def get_open_pull_requests(request_info):
     return _json_resp(resp)
 
 
+def get_pull_request(number, request_info):
+    path = "/repos/{owner}/{project}/pulls/{pr_number}"
+    url = _build_url(path, request_info, extra_info={
+        'pr_number': number
+    })
+    resp = requests.get(url)
+    return _json_resp(resp)
+
+
 def get_pull_request_comments(url, request_info):
     # The url already starts with https://api...
     url = _build_url(url, request_info)
@@ -106,6 +119,45 @@ def mergeable_pull_requests(trigger_word, request_info):
                     mergable_prs.append(pr)
 
     return mergable_prs
+
+
+def merge_pull_request(pr_number, jenkins_url, request_info):
+    """Given a passing build, trigger a merge on this pull request."""
+    merge_url = "/repos/{owner}/{project}/pulls/{pr_number}/merge"
+    url = _build_url(merge_url, request_info, {
+        'pr_number': pr_number
+    })
+    resp = requests.put(url)
+    try:
+        return _json_resp(resp)
+    except GithubError as exc:
+        # A failed merge will result in a 405 response which is an error.
+        # There could also be another error, such as a limit hit on the number
+        # of api connections. We attempt to decode and return the original
+        # merge fail response, but reraise any others.
+        try:
+            payload = json.loads(str(exc))
+            return payload
+        except ValueError:
+            raise exc
+
+
+def pull_request_build_failed(pr, build_url, failure_message, request_info):
+    """Notify the pull request that the merge job has failed to build"""
+    comments_url = pr['_links']['comments']['href']
+    url = _build_url(comments_url, request_info)
+    comment_body = """Build failed: {0}
+        build url: {1}
+    """.format(failure_message, build_url)
+
+    return _json_resp(
+        requests.post(
+            url,
+            data={
+                'body': dedent(comment_body)
+            }
+        )
+    )
 
 
 def pull_request_kicked(pr, jenkins_url, request_info):

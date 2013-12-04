@@ -10,12 +10,12 @@ Process
 --------
 
 - Pull request is created
-- Code review happens and tests are run from an outside jenkins job.
+- Code review happens and tests are run from an outside Jenkins job.
 - Once code receives a LGTM, the author places a keyword "$$merge$$" into a
   final comment on the pull request.
-- This webservice, via a hook notification github, catches this and triggers a
+- This webservice, via a hook notification Github, catches this and triggers a
   merge job in jenkins.
-- If all tests pass, the jenkins server will ping back that this pull request
+- If all tests pass, the Jenkins server will ping back that this pull request
   is good and passes all tests.
 - This web service then triggers a merge via the Github api to land the branch.
 
@@ -23,7 +23,7 @@ Process
 Configuration
 --------------
 
-Update the ini file used to launch the web service with the following
+Update the INI file used to launch the web service with the following
 configuration keys.
 
 
@@ -39,6 +39,55 @@ configuration keys.
     github.token = github-bot-auth-token
     github.owner = Juju
     github.project = juju-gui
+
+
+Triggering Merge from Jenkins
+------------------------------
+
+Jenkins is charged with running the actual build testing that a pull request
+is correct and ready to merge. At the end of the build script for your job,
+the service must be triggered with a command to either merge the pull request
+or that a pull request build failed. In the case of a failure, the service
+will add a comment to the pull request stating that, and linking back to the
+Jenkins job to aid in debugging.
+
+Success
+~~~~~~~~
+
+A build should exit on the first command in the build that returns a
+non-successful error code. To indicate success, the command only needs to be
+the last item in the build script.
+
+Please indicate the pull request number so the script can properly close the
+correct one. Also make sure to indicate the build number from Jenkins so that
+the link to this build can be constructed.  The build number should be
+available in the `ENV` within `$BUILD_NUMBER`.
+
+::
+
+    cd /$path/to/service/venv/ && \
+    ./bin/lander-merge-result --ini development.ini --pr=5 --build=25
+
+
+Failure
+~~~~~~~~
+
+To indicate a build has failed, you'll need to trigger the command after the
+build has run and failed. There are a couple of different Jenkins plugins that
+can assist with this.
+
+  - https://wiki.jenkins-ci.org/display/JENKINS/PostBuildScript+Plugin
+  - https://wiki.jenkins-ci.org/display/JENKINS/Post+build+task
+
+
+Please indicate the pull request for updating. Also make sure to indicate the
+build number from Jenkins so that the link to this build can be constructed.
+The build number should be available in the `ENV` within `$BUILD_NUMBER`.
+
+::
+
+    cd /$path/to/service/venv/ && \
+    ./bin/lander-merge-result --ini development.ini --failure="Build failed" --pr=5 --build=25
 
 
 Running as a webservice
@@ -62,8 +111,8 @@ landing might not match the real order of comments on the pull requests.
 
     */3 * * * * cd /$path/to/service/venv/ && ./bin/lander-check-pulls --ini development.ini
 
-Running Manually
-----------------
+Running webservice Manually
+----------------------------
 Currently the only way it works is to run manually. Copy the `sample.ini` file
 into `development.ini` and update the config for your jenkins/github
 configuration.

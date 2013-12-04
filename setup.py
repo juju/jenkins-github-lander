@@ -50,7 +50,10 @@ setup(
             'main = jenkinsgithublander.app:main'
         ],
         'console_scripts': [
-            'lander-check-pulls=jenkinsgithublander.scripts.check_pulls:main'
+            ('lander-check-pulls='
+             'jenkinsgithublander.scripts.check_pulls:main'),
+            ('lander-merge-result='
+             'jenkinsgithublander.scripts.merge_result:main'),
         ],
     },
 )
