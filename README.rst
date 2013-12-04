@@ -10,7 +10,8 @@ Process
 --------
 
 - Pull request is created
-- Code review happens and tests are run from an outside Jenkins job.
+- Code review happens and tests are run from an outside Jenkins job. (We use
+  the Github pull request builder plugin)
 - Once code receives a LGTM, the author places a keyword "$$merge$$" into a
   final comment on the pull request.
 - This webservice, via a hook notification Github, catches this and triggers a
@@ -35,7 +36,7 @@ server. The steps below walk through a sample setup process.
     cd jenkins-github-lander
     make all
     make development.ini
-    # Hack the ini settings for the jenkins server and the github project/bot user.
+    # Hack the INI settings for the jenkins server and the github project/bot user.
 
     # Add cron job per README
 
@@ -137,8 +138,10 @@ landing might not match the real order of comments on the pull requests.
 
     */3 * * * * cd /$path/to/service/venv/ && ./bin/lander-check-pulls --ini development.ini
 
+
 Running webservice Manually
 ----------------------------
+
 Currently the only way it works is to run manually. Copy the `sample.ini` file
 into `development.ini` and update the config for your jenkins/github
 configuration.
