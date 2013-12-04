@@ -2,10 +2,11 @@ News
 ====
 
 
-0.1a
+0.1
 -----
 
-*Release date: TBD *
+*Release date: Dec 4th 2013 *
 
-* Example news entry for a released version
+* Initial project is up and works via cli command provided.
+* Future work will setup the web server and Github comment hook tracking work.
 
