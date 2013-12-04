@@ -128,7 +128,16 @@ class TestJobs(TestCase):
         pull_request = 5
         build_number = 10
         merged = load_data('github-merge-success.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request_data = pulls[0]
 
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5',
+            body=json.dumps(pull_request_data),
+            status=200,
+            content_type='application/json'
+        )
         # Will need to mock out the pull request get, the comment response.
         responses.add(
             responses.PUT,
