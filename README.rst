@@ -20,6 +20,29 @@ Process
 - This web service then triggers a merge via the Github api to land the branch.
 
 
+Install on Jenkins Server
+--------------------------
+
+The service does not have to be, but it can be installed on your Jenkins
+server. The steps below walk through a sample setup process.
+
+::
+
+    ssh ci.com
+    sudo su jenkins
+    cd ~
+    git clone https://github.com/juju/jenkins-github-lander.git
+    cd jenkins-github-lander
+    make all
+    make development.ini
+    # Hack the ini settings for the jenkins server and the github project/bot user.
+
+    # Add cron job per README
+
+    # Add to the -merge job's build steps the final step of:
+    cd /var/lib/jenkins/jenkins-github-lander && ./bin/lander-merge-result --ini development.ini --pr=${pr} --build=${BUILD_NUMBER}
+
+
 Configuration
 --------------
 
