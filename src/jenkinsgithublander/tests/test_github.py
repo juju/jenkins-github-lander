@@ -268,7 +268,16 @@ class TestGithubHelpers(TestCase):
     @responses.activate
     def test_merge_pull_request(self):
         merge_response = load_data('github-merge-success.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request = pulls[0]
 
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4',
+            body=json.dumps(pull_request),
+            status=200,
+            content_type='application/json'
+        )
         responses.add(
             responses.PUT,
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4/merge',
@@ -290,6 +299,16 @@ class TestGithubHelpers(TestCase):
     @responses.activate
     def test_merge_pull_request_fails(self):
         merge_response = load_data('github-merge-failed.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request = pulls[0]
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4',
+            body=json.dumps(pull_request),
+            status=200,
+            content_type='application/json'
+        )
 
         responses.add(
             responses.PUT,
@@ -312,6 +331,16 @@ class TestGithubHelpers(TestCase):
     @responses.activate
     def test_merge_pull_request_fail_unplanned(self):
         """Still throws exception on expected request failure."""
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request = pulls[0]
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4',
+            body=json.dumps(pull_request),
+            status=200,
+            content_type='application/json'
+        )
         responses.add(
             responses.PUT,
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/4/merge',
@@ -344,7 +373,7 @@ class TestGithubHelpers(TestCase):
                 u'comments'
             ),
             body=new_comment,
-            status=200,
+            status=201,
             content_type='application/json'
         )
 
@@ -372,7 +401,7 @@ class TestGithubHelpers(TestCase):
                 u'comments'
             ),
             body=new_comment,
-            status=200,
+            status=201,
             content_type='application/json'
         )
 
