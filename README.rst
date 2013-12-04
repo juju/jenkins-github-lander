@@ -63,6 +63,9 @@ correct one. Also make sure to indicate the build number from Jenkins so that
 the link to this build can be constructed.  The build number should be
 available in the `ENV` within `$BUILD_NUMBER`.
 
+Note that this is not to be run from the build. It will not have the correct
+INI file.
+
 ::
 
     cd /$path/to/service/venv/ && \
