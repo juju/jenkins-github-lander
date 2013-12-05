@@ -15,6 +15,7 @@ from jenkinsgithublander.jobs import (
     mark_pull_request_build_failed,
     do_merge_pull_request
 )
+from jenkinsgithublander.utils import build_config
 
 
 def parse_args():
@@ -52,8 +53,17 @@ def parse_args():
     )
 
     parser.add_argument(
-        '-b', '--build',
+        '-j', '--job-name',
         action='store',
+        dest='job_name',
+        required=True,
+        help='The Github pull request that was tested.'
+    )
+
+    parser.add_argument(
+        '--build-number',
+        action='store',
+        dest='build_number',
         required=True,
         help='The Jenkins build number this result is for.'
     )
@@ -76,15 +86,17 @@ def parse_config(ini):
     cfg = ConfigParser()
     cfg.readfp(open(ini))
 
-    return dict(cfg.items('app:main', raw=True))
+    settings = dict(cfg.items('app:main', raw=True))
+    return build_config(settings)
 
 
 def run(args, config):
     if args.failure is not None:
         ret = mark_pull_request_build_failed(
-            args.pr, args.build, args.failure, config)
+            args.job_name, args.pr, args.build_number, args.failure, config)
     else:
-        ret = do_merge_pull_request(args.pr, args.build, config)
+        ret = do_merge_pull_request(
+            args.job_name, args.pr, args.build_number, config)
 
     print ret
 

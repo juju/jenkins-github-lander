@@ -25,64 +25,83 @@ def kick_mergeable_pull_requests(config):
     :return kicked: The list of pull requests that were kicked.
 
     """
-    github_info = GithubInfo(
-        config['github.owner'],
-        config['github.project'],
-        config['github.username'],
-        config['github.token'],
-    )
-
-    mergable = mergeable_pull_requests(
-        config['jenkins.merge.trigger'],
-        github_info,
-    )
-
     kicked = []
-    if mergable:
-        jenkins_info = JenkinsInfo(
-            config['jenkins.merge.url'],
-            config['jenkins.merge.job'],
-            config['jenkins.merge.token'],
+    for project, merge_job in config['projects'].iteritems():
+        github_info = GithubInfo(
+            config['github.owner'],
+            project,
+            config['github.username'],
+            config['github.token'],
         )
 
-        for pr in mergable:
-            try:
-                kick_jenkins_merge(
-                    pr['number'], pr['head']['sha'], jenkins_info)
-                kicked.append('Kicking pull request: {} at sha {}'.format(
-                    pr['number'], pr['head']['sha']
-                ))
+        mergable = mergeable_pull_requests(
+            config['jenkins.merge.trigger'],
+            github_info,
+        )
 
-                # Notify the pull request that we've scheduled a build for it.
-                jenkins_url = generate_job_url(jenkins_info)
-                pull_request_kicked(pr, jenkins_url, github_info)
+        if mergable:
+            jenkins_info = JenkinsInfo(
+                config['jenkins.merge.url'],
+                merge_job,
+                config['jenkins.merge.token'],
+            )
 
-            except JenkinsError as exc:
-                kicked.append(
-                    'Failed to kick {0}. Failure message: {1}'.format(
+            for pr in mergable:
+                try:
+                    kick_message = 'Kicking {} pull request: {} at sha {}'
+                    kick_jenkins_merge(
+                        pr['number'], pr['head']['sha'], jenkins_info)
+                    kicked.append(kick_message.format(
+                        project,
                         pr['number'],
-                        exc
+                        pr['head']['sha'],
+                    ))
+
+                    # Notify the pull request that we've scheduled a build for
+                    # it.
+                    jenkins_url = generate_job_url(jenkins_info)
+                    pull_request_kicked(pr, jenkins_url, github_info)
+
+                except JenkinsError as exc:
+                    fail_message = ('Failed to kick {0} #{0}. '
+                                    'Failure message: {1}')
+                    kicked.append(
+                        fail_message.format(
+                            project,
+                            pr['number'],
+                            exc,
+                        )
                     )
-                )
 
     return kicked
 
 
-def mark_pull_request_build_failed(pr, build_number, failure_message, config):
+def mark_pull_request_build_failed(job_name, pr, build_number, failure_message,
+                                   config):
     """The given pull request failed to build.
 
     Comment on the pull request to alert the devs of this issue.
 
+    :param job_name: The Jenkins ENV var for $JOB_NAME
+    :param pr: The pull request number from the parameterized build.
+    :param build_nubmer: The jenkins build number.
+
     """
+    # Find the project by matching up the job_name from the Jenkins build.
+    github_project = None
+    for project, job in config['projects'].iteritems():
+        if job == job_name:
+            github_project = project
+
     github_info = GithubInfo(
         config['github.owner'],
-        config['github.project'],
+        github_project,
         config['github.username'],
         config['github.token'],
     )
     jenkins_info = JenkinsInfo(
         config['jenkins.merge.url'],
-        config['jenkins.merge.job'],
+        job_name,
         config['jenkins.merge.token'],
     )
 
@@ -100,19 +119,25 @@ def mark_pull_request_build_failed(pr, build_number, failure_message, config):
         return 'Failed to add comment: {0}'.format(exc)
 
 
-def do_merge_pull_request(pr, build_number, config):
+def do_merge_pull_request(job_name, pr, build_number, config):
     """The given pull build passed and needs to be merged.
 
     """
+    # Find the project by matching up the job_name from the Jenkins build.
+    github_project = None
+    for project, job in config['projects'].iteritems():
+        if job == job_name:
+            github_project = project
+
     github_info = GithubInfo(
         config['github.owner'],
-        config['github.project'],
+        github_project,
         config['github.username'],
         config['github.token'],
     )
     jenkins_info = JenkinsInfo(
         config['jenkins.merge.url'],
-        config['jenkins.merge.job'],
+        job_name,
         config['jenkins.merge.token'],
     )
 

@@ -8,6 +8,7 @@ from jenkinsgithublander.jobs import (
     mark_pull_request_build_failed,
     do_merge_pull_request,
 )
+from jenkinsgithublander.utils import build_config
 from jenkinsgithublander.tests.utils import load_data
 
 
@@ -66,13 +67,14 @@ class TestJobs(TestCase):
             'jenkins.merge.token': 'buildme',
             'jenkins.merge.trigger': '$$merge$$',
         }
+        fake_config = build_config(fake_config)
 
         with mock.patch('jenkinsgithublander.jobs.kick_jenkins_merge'):
             kicked = kick_mergeable_pull_requests(fake_config)
 
         self.assertEqual(1, len(kicked))
         self.assertTrue(
-            kicked[0].startswith('Kicking pull request: 5 at sha '))
+            kicked[0].startswith('Kicking juju-gui pull request: 5 at sha '))
 
     @responses.activate
     def test_mark_pull_request_build_failed(self):
@@ -112,8 +114,10 @@ class TestJobs(TestCase):
             'jenkins.merge.token': 'buildme',
             'jenkins.merge.trigger': '$$merge$$',
         }
+        fake_config = build_config(fake_config)
 
         resp = mark_pull_request_build_failed(
+            'juju-gui-merge',
             pull_request,
             build_number,
             'build Failed',
@@ -157,8 +161,10 @@ class TestJobs(TestCase):
             'jenkins.merge.token': 'buildme',
             'jenkins.merge.trigger': '$$merge$$',
         }
+        fake_config = build_config(fake_config)
 
         resp = do_merge_pull_request(
+            'juju-gui-merge',
             pull_request,
             build_number,
             fake_config
