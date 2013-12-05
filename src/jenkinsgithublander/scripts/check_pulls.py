@@ -4,6 +4,7 @@ from os import path
 
 from jenkinsgithublander import VERSION
 from jenkinsgithublander.jobs import kick_mergeable_pull_requests
+from jenkinsgithublander.utils import build_config
 
 
 def parse_args():
@@ -41,7 +42,8 @@ def parse_config(ini):
     cfg = ConfigParser()
     cfg.readfp(open(ini))
 
-    return dict(cfg.items('app:main', raw=True))
+    settings = dict(cfg.items('app:main', raw=True))
+    return build_config(settings)
 
 
 def run(args, config):

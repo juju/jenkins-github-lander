@@ -19,12 +19,18 @@ def generate_build_url(number, config):
 
 
 def generate_job_url(config):
-    return config.url.format(config.job)
+    url = config.url
+    return url.format(config.job)
+
+
+def generate_job_build_url(config):
+    url = config.url + '/buildWithParameters'
+    return url.format(config.job)
 
 
 def kick_jenkins_merge(pr_id, git_sha, jenkins_info):
     """Trigger a merge build for the pull request specified"""
-    url = generate_job_url(jenkins_info)
+    url = generate_job_build_url(jenkins_info)
     request_data = {
         'pr': pr_id,
         'sha1': git_sha,
