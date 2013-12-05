@@ -93,7 +93,7 @@ INI file.
 ::
 
     cd /$path/to/service/venv/ && \
-    ./bin/lander-merge-result --ini development.ini --pr=5 --build=25
+    ./bin/lander-merge-result --ini development.ini --pr=5 --job-name=project-merge --build-number=25
 
 
 Failure
@@ -114,7 +114,7 @@ The build number should be available in the `ENV` within `$BUILD_NUMBER`.
 ::
 
     cd /$path/to/service/venv/ && \
-    ./bin/lander-merge-result --ini development.ini --failure="Build failed" --pr=5 --build=25
+    ./bin/lander-merge-result --ini development.ini --failure="Build failed" --pr=5 --job-name=project-merge --build-number=25
 
 
 Running as a webservice
