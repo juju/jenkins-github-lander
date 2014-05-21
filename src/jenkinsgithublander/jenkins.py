@@ -38,5 +38,7 @@ def kick_jenkins_merge(pr_id, git_sha, jenkins_info):
     }
 
     resp = requests.post(url, request_data)
-    if resp.status_code != 200:
+    try:
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError:
         raise JenkinsError(resp.content)

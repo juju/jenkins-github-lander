@@ -76,3 +76,33 @@ class TestJenkinsHelpers(TestCase):
         result = kick_jenkins_merge(4, 'sha1232', info)
 
         self.assertIsNone(result)
+
+    @responses.activate
+    def test_kick_jenkins_merge_201(self):
+        responses.add(
+            responses.POST,
+            'http://jenkins.com/job/one/buildWithParameters',
+            body='',
+            status=201,
+            content_type='application/json'
+        )
+
+        info = JenkinsInfo(
+            'http://jenkins.com/job/{}', 'one', '1234')
+        result = kick_jenkins_merge(4, 'sha1232', info)
+
+        self.assertIsNone(result)
+
+    @responses.activate
+    def test_kick_jenkins_merge_404(self):
+        responses.add(
+            responses.POST,
+            'http://jenkins.com/job/one/buildWithParameters',
+            body='',
+            status=404,
+            content_type='application/json'
+        )
+
+        info = JenkinsInfo(
+            'http://jenkins.com/job/{}', 'one', '1234')
+        self.assertRaises(JenkinsError, kick_jenkins_merge, 4, 'sha1232', info)
