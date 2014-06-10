@@ -128,10 +128,14 @@ def merge_pull_request(pr_number, jenkins_url, request_info):
     url = _build_url(merge_url, request_info, {
         'pr_number': pr_number
     })
+
+    commit_message = pr['title'].strip()
+    if pr['body']:
+        commit_message += "\n\n" + pr['body']
     resp = requests.put(
         url,
         data=json.dumps({
-            'commit_message': pr['body']
+            'commit_message': commit_message,
         })
     )
 
