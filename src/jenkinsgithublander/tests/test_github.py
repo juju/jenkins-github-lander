@@ -293,6 +293,12 @@ class TestGithubHelpers(TestCase):
             info
         )
 
+        self.assertEqual(len(responses.calls), 2)
+        self.assertEqual(responses.calls[0].request.method, "GET")
+        self.assertEqual(responses.calls[1].request.method, "PUT")
+        self.assertEqual(responses.calls[1].request.body,
+                         '{"commit_message": "here are the changes requested."}')
+
         self.assertEqual(True, result['merged'])
         self.assertEqual("Pull Request successfully merged", result['message'])
 
