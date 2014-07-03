@@ -10,6 +10,7 @@ GithubInfo = namedtuple(
     'GithubInfo',
     ['owner', 'project', 'username', 'token'])
 
+MERGE_FAILED = 'Build failed: '
 MERGE_SCHEDULED = 'merge request accepted'
 
 
@@ -59,10 +60,14 @@ def _is_mergeable(comments, owner, trigger, request_info):
         if MERGE_SCHEDULED in comment['body']:
             is_merging = True
 
+        # Reset the status if a requested merge failed.
+        if is_merging and MERGE_FAILED in comment['body']:
+            request_merge = False
+            is_merging = False
+
     if request_merge and not is_merging:
         return True
-    else:
-        return False
+    return False
 
 
 def _json_resp(response):
