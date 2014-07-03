@@ -142,16 +142,11 @@ def do_merge_pull_request(job_name, pr, build_number, config):
     )
 
     build_url = generate_build_url(build_number, jenkins_info)
-    try:
-        result = merge_pull_request(
-            pr,
-            build_url,
-            github_info
-        )
-        if result['merged']:
-            return result['message']
-        else:
-            raise GithubError(
-                'Failed to merge: {0}'.format(result['message']))
-    except GithubError as exc:
-        return 'Failed to add comment: {0}'.format(exc)
+    result = merge_pull_request(
+        pr,
+        build_url,
+        github_info
+    )
+    if result.get("merged", False):
+        return result['message']
+    raise GithubError('Failed to merge: {0}'.format(result))

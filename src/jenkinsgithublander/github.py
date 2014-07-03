@@ -4,6 +4,8 @@ import json
 import requests
 from textwrap import dedent
 
+from jenkinsgithublander import LanderError
+
 
 API_URL = 'https://api.github.com'
 GithubInfo = namedtuple(
@@ -13,8 +15,8 @@ GithubInfo = namedtuple(
 MERGE_SCHEDULED = 'merge request accepted'
 
 
-class GithubError(Exception):
-    pass
+class GithubError(LanderError):
+    """Error interacting with the github api"""
 
 
 def _build_url(route, request_info, extra_info=None):

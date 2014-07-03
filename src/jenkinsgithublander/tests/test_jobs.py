@@ -3,6 +3,7 @@ import mock
 import responses
 from unittest import TestCase
 
+from jenkinsgithublander.github import GithubError
 from jenkinsgithublander.jobs import (
     kick_mergeable_pull_requests,
     mark_pull_request_build_failed,
@@ -13,6 +14,19 @@ from jenkinsgithublander.tests.utils import load_data
 
 
 class TestJobs(TestCase):
+
+    def _get_fake_config(self):
+        fake_config = {
+            'github.owner': 'CanonicalJS',
+            'github.project': 'juju-gui',
+            'github.username': 'juju-gui',
+            'github.token': '1234',
+            'jenkins.merge.url': 'http://jenkins/job/{0}/build',
+            'jenkins.merge.job': 'juju-gui-merge',
+            'jenkins.merge.token': 'buildme',
+            'jenkins.merge.trigger': '$$merge$$',
+        }
+        return build_config(fake_config)
 
     @responses.activate
     def test_merge_pull_request_kicker(self):
@@ -57,17 +71,7 @@ class TestJobs(TestCase):
             content_type='application/json'
         )
 
-        fake_config = {
-            'github.owner': 'CanonicalJS',
-            'github.project': 'juju-gui',
-            'github.username': 'juju-gui',
-            'github.token': '1234',
-            'jenkins.merge.url': 'http://jenkins/job/{0}/build',
-            'jenkins.merge.job': 'juju-gui-merge',
-            'jenkins.merge.token': 'buildme',
-            'jenkins.merge.trigger': '$$merge$$',
-        }
-        fake_config = build_config(fake_config)
+        fake_config = self._get_fake_config()
 
         with mock.patch('jenkinsgithublander.jobs.kick_jenkins_merge'):
             kicked = kick_mergeable_pull_requests(fake_config)
@@ -104,17 +108,7 @@ class TestJobs(TestCase):
             content_type='application/json'
         )
 
-        fake_config = {
-            'github.owner': 'CanonicalJS',
-            'github.project': 'juju-gui',
-            'github.username': 'juju-gui',
-            'github.token': '1234',
-            'jenkins.merge.url': 'http://jenkins/job/{0}/build',
-            'jenkins.merge.job': 'juju-gui-merge',
-            'jenkins.merge.token': 'buildme',
-            'jenkins.merge.trigger': '$$merge$$',
-        }
-        fake_config = build_config(fake_config)
+        fake_config = self._get_fake_config()
 
         resp = mark_pull_request_build_failed(
             'juju-gui-merge',
@@ -151,17 +145,7 @@ class TestJobs(TestCase):
             content_type='application/json'
         )
 
-        fake_config = {
-            'github.owner': 'CanonicalJS',
-            'github.project': 'juju-gui',
-            'github.username': 'juju-gui',
-            'github.token': '1234',
-            'jenkins.merge.url': 'http://jenkins/job/{0}/build',
-            'jenkins.merge.job': 'juju-gui-merge',
-            'jenkins.merge.token': 'buildme',
-            'jenkins.merge.trigger': '$$merge$$',
-        }
-        fake_config = build_config(fake_config)
+        fake_config = self._get_fake_config()
 
         resp = do_merge_pull_request(
             'juju-gui-merge',
@@ -171,3 +155,38 @@ class TestJobs(TestCase):
         )
 
         self.assertEqual('Pull Request successfully merged', resp)
+
+    @responses.activate
+    def test_pull_request_missing_merge_field(self):
+        # Fake out the data for the github requests.
+        pull_request = 5
+        build_number = 10
+        merged = load_data('github-merge-not-mergeable.json')
+        pulls = load_data('github-open-pulls.json', load_json=True)
+        pull_request_data = pulls[0]
+
+        responses.add(
+            responses.GET,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5',
+            body=json.dumps(pull_request_data),
+            status=200,
+            content_type='application/json'
+        )
+        # Will need to mock out the pull request get, the comment response.
+        responses.add(
+            responses.PUT,
+            'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5/merge',
+            body=merged,
+            status=200,
+            content_type='application/json'
+        )
+
+        fake_config = self._get_fake_config()
+
+        self.assertRaisesRegexp(GithubError, "^Failed to merge: ",
+            do_merge_pull_request,
+            'juju-gui-merge',
+            pull_request,
+            build_number,
+            fake_config
+        )
