@@ -28,12 +28,15 @@ def generate_job_build_url(config):
     return url.format(config.job)
 
 
-def kick_jenkins_merge(pr_id, git_sha, jenkins_info):
+def kick_jenkins_merge(pr_info, jenkins_info):
     """Trigger a merge build for the pull request specified"""
     url = generate_job_build_url(jenkins_info)
     request_data = {
-        'pr': pr_id,
-        'sha1': git_sha,
+        'pr': pr_info.number,
+        'base': pr_info.base_ref,
+        'ref': pr_info.head_ref,
+        'sha1': pr_info.head_sha,
+        'repo': pr_info.head_repo_url,
         'token': jenkins_info.token,
     }
 

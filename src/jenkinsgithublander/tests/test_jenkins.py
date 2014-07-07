@@ -1,6 +1,7 @@
 import responses
 from unittest import TestCase
 
+from jenkinsgithublander.github import PullRequestInfo
 from jenkinsgithublander.jenkins import (
     generate_build_url,
     generate_job_build_url,
@@ -12,6 +13,10 @@ from jenkinsgithublander.jenkins import (
 
 
 class TestJenkinsHelpers(TestCase):
+
+    def get_pr_info(self):
+        return PullRequestInfo(4, "master", "auser", "abranch", "sha1232",
+            "https://git.test", None)
 
     def test_generate_build_url(self):
         build_num = 5
@@ -59,7 +64,8 @@ class TestJenkinsHelpers(TestCase):
 
         info = JenkinsInfo(
             'http://jenkins.com/job/{}', 'nope', '1234')
-        self.assertRaises(JenkinsError, kick_jenkins_merge, 4, 'sha1232', info)
+        pr_info = self.get_pr_info()
+        self.assertRaises(JenkinsError, kick_jenkins_merge, pr_info, info)
 
     @responses.activate
     def test_kick_jenkins_merge(self):
@@ -73,7 +79,7 @@ class TestJenkinsHelpers(TestCase):
 
         info = JenkinsInfo(
             'http://jenkins.com/job/{}', 'one', '1234')
-        result = kick_jenkins_merge(4, 'sha1232', info)
+        result = kick_jenkins_merge(self.get_pr_info(), info)
 
         self.assertIsNone(result)
 
@@ -89,7 +95,7 @@ class TestJenkinsHelpers(TestCase):
 
         info = JenkinsInfo(
             'http://jenkins.com/job/{}', 'one', '1234')
-        result = kick_jenkins_merge(4, 'sha1232', info)
+        result = kick_jenkins_merge(self.get_pr_info(), info)
 
         self.assertIsNone(result)
 
@@ -105,4 +111,5 @@ class TestJenkinsHelpers(TestCase):
 
         info = JenkinsInfo(
             'http://jenkins.com/job/{}', 'one', '1234')
-        self.assertRaises(JenkinsError, kick_jenkins_merge, 4, 'sha1232', info)
+        pr_info = self.get_pr_info()
+        self.assertRaises(JenkinsError, kick_jenkins_merge, pr_info, info)

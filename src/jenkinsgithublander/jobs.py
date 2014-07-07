@@ -48,13 +48,12 @@ def kick_mergeable_pull_requests(config):
 
             for pr in mergable:
                 try:
+                    kick_jenkins_merge(pr, jenkins_info)
                     kick_message = 'Kicking {} pull request: {} at sha {}'
-                    kick_jenkins_merge(
-                        pr['number'], pr['head']['sha'], jenkins_info)
                     kicked.append(kick_message.format(
                         project,
-                        pr['number'],
-                        pr['head']['sha'],
+                        pr.number,
+                        pr.head_sha,
                     ))
 
                     # Notify the pull request that we've scheduled a build for
@@ -63,15 +62,12 @@ def kick_mergeable_pull_requests(config):
                     pull_request_kicked(pr, jenkins_url, github_info)
 
                 except JenkinsError as exc:
-                    fail_message = ('Failed to kick {0} #{0}. '
-                                    'Failure message: {1}')
-                    kicked.append(
-                        fail_message.format(
-                            project,
-                            pr['number'],
-                            exc,
-                        )
-                    )
+                    fail_message = 'Failed to kick {} #{}. Failure message: {}'
+                    kicked.append(fail_message.format(
+                        project,
+                        pr.number,
+                        exc,
+                    ))
 
     return kicked
 
