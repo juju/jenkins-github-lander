@@ -11,6 +11,11 @@ API_URL = 'https://api.github.com'
 GithubInfo = namedtuple(
     'GithubInfo',
     ['owner', 'project', 'username', 'token'])
+PullRequestInfo = namedtuple(
+    "PullRequestInfo", [
+        "number", "base_ref", "base_user", "head_ref", "head_sha",
+        "head_repo_url", "comments_href",
+    ])
 
 MERGE_FAILED = 'Build failed: '
 MERGE_SCHEDULED = 'merge request accepted'
@@ -108,6 +113,19 @@ def get_pull_request_comments(url, request_info):
     return _json_resp(resp)
 
 
+def make_pull_request_info(json):
+    """Wrap pull request json in PullRequestInfo object"""
+    return PullRequestInfo(
+        number=json["number"],
+        base_ref=json["base"]["ref"],
+        base_user=json["base"]["user"],
+        head_ref=json["head"]["ref"],
+        head_sha=json["head"]["sha"],
+        head_repo_url=json["head"]["repo"]["clone_url"],
+        comments_href=json["_links"]["comments"]["href"],
+    )
+
+
 def mergeable_pull_requests(trigger_word, request_info):
     """Find the links to the issue comments where a command to merge lives."""
     prs = get_open_pull_requests(request_info)
@@ -115,15 +133,16 @@ def mergeable_pull_requests(trigger_word, request_info):
 
     if prs:
         for pr in prs:
+            pr_info = make_pull_request_info(pr)
             comments = get_pull_request_comments(
-                pr['_links']['comments']['href'],
+                pr_info.comments_href,
                 request_info
             )
 
             if comments:
-                owner = pr['base']['user']
+                owner = pr_info.base_user
                 if _is_mergeable(comments, owner, trigger_word, request_info):
-                    mergable_prs.append(pr)
+                    mergable_prs.append(pr_info)
 
     return mergable_prs
 
@@ -178,10 +197,9 @@ def pull_request_build_failed(pr, build_url, failure_message, request_info):
     )
 
 
-def pull_request_kicked(pr, jenkins_url, request_info):
+def pull_request_kicked(pr_info, jenkins_url, request_info):
     """Notify the pull request that the merge job has been kicked."""
-    comments_url = pr['_links']['comments']['href']
-    url = _build_url(comments_url, request_info)
+    url = _build_url(pr_info.comments_href, request_info)
     comment_body = "Status: {0}. Url: {1}".format(
         MERGE_SCHEDULED,
         jenkins_url)
