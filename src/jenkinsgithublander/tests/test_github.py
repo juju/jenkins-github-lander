@@ -3,7 +3,10 @@ import json
 import responses
 from unittest import TestCase
 
-from jenkinsgithublander import github
+from jenkinsgithublander import (
+    github,
+    LanderError,
+)
 from jenkinsgithublander.github import (
     get_open_pull_requests,
     GithubInfo,
@@ -14,6 +17,15 @@ from jenkinsgithublander.github import (
     pull_request_kicked,
 )
 from jenkinsgithublander.tests.utils import load_data
+
+
+class TestGithubError(TestCase):
+
+    def test_github_error(self):
+        """A GithubError can be made, stringified, and is a LanderError"""
+        e = GithubError("Test error")
+        self.assertEqual(str(e), "Test error")
+        self.assertIsInstance(e, LanderError)
 
 
 class TestGithubHelpers(TestCase):

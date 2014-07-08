@@ -9,8 +9,12 @@ import argparse
 from ConfigParser import ConfigParser
 from os import path
 from textwrap import dedent
+import sys
 
-from jenkinsgithublander import VERSION
+from jenkinsgithublander import (
+    LanderError,
+    VERSION,
+)
 from jenkinsgithublander.jobs import (
     mark_pull_request_build_failed,
     do_merge_pull_request
@@ -104,8 +108,13 @@ def run(args, config):
 def main():
     args = parse_args()
     cfg = parse_config(args.ini)
-    run(args, cfg)
+    try:
+        run(args, cfg)
+    except LanderError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
