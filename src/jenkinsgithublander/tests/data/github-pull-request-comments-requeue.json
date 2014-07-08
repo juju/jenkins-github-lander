@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "user": {
+      "login": "mitechie",
+      "id": 75915
+    },
+    "body": "$$merge$$"
+  },
+  {
+    "id": 2,
+    "user": {
+      "login": "jujugui",
+      "id": 6012845
+    },
+    "body": "Status: merge request accepted. Url: http://jenkins.test/job/github-merge"
+  },
+  {
+    "id": 3,
+    "user": {
+      "login": "jujugui",
+      "id": 6012845
+    },
+    "body": "Build failed: Tests failed\n        build url: http://jenkins.test/job/github-merge/1"
+  },
+  {
+    "id": 4,
+    "user": {
+      "login": "mitechie",
+      "id": 75915
+    },
+    "body": "$$merge$$"
+  }
+]
