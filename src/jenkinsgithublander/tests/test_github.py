@@ -122,6 +122,32 @@ class TestGithubHelpers(TestCase):
         )
 
     @responses.activate
+    def test_no_mergeable_pull_requests(self):
+        comments = load_data(
+            'github-pull-request-comments.json',
+            load_json=True)
+        # Remove the first comment since it's the trigger one.
+        comments.pop(0)
+
+        self.add_open_pulls_response()
+
+        responses.add(
+            responses.GET,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=json.dumps(comments),
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('juju', 'project', 'jujugui', None)
+        mergeable = mergeable_pull_requests('$$merge$$', info)
+
+        self.assertEqual(0, len(mergeable))
+
+    @responses.activate
     def test_not_mergeable_if_not_in_org(self):
         orgs = load_data('github-user-orgs.json', load_json=True)
         comments = load_data('github-pull-request-comments.json')
