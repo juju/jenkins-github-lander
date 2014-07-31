@@ -41,8 +41,9 @@ class TestGithubHelpers(TestCase):
             content_type='application/json'
         )
 
-    def add_open_pulls_response(self, user="juju", repo="project"):
-        resp_json = load_data('github-open-pulls.json')
+    def add_open_pulls_response(self, user="juju", repo="project",
+                                json_file="github-open-pulls.json"):
+        resp_json = load_data(json_file)
         responses.add(
             responses.GET,
             'https://api.github.com/repos/{}/{}/pulls'.format(user, repo),
@@ -232,6 +233,32 @@ class TestGithubHelpers(TestCase):
 
         self.assertEqual(1, len(mergeable))
         self.assertEqual(5, mergeable[0].number)
+
+    @responses.activate
+    def test_mergeable_pull_requests_skip_prs_with_no_repo(self):
+        # This test is similar to test_mergeable_pull_requests but the 'repo'
+        # is null, mimicing the case where the user has deleted the repo
+        # referenced in the pull request.
+        comments = load_data('github-pull-request-comments.json')
+
+        self.add_user_orgs_response("mitechie")
+        self.add_open_pulls_response("CanonicalJS", "juju-gui",
+                                     json_file="github-open-pulls-deleted-branch.json")
+        responses.add(
+            responses.GET,
+            (
+                u'https://api.github.com/repos/CanonicalJS/juju-gui/issues/5/'
+                u'comments'
+            ),
+            body=comments,
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('CanonicalJS', 'juju-gui', 'jujugui', None)
+        mergeable = mergeable_pull_requests('$$merge$$', info)
+
+        self.assertEqual(0, len(mergeable))
 
     @responses.activate
     def test_merge_pull_request(self):

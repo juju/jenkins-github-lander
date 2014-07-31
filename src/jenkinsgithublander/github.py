@@ -115,13 +115,19 @@ def get_pull_request_comments(url, request_info):
 
 def make_pull_request_info(json):
     """Wrap pull request json in PullRequestInfo object"""
+
+    # If the user deletes the source repo that is referenced in the pull
+    # request, then ignore it.
+    repo = json["head"]["repo"]
+    if repo is None:
+        return None
     return PullRequestInfo(
         number=json["number"],
         base_ref=json["base"]["ref"],
         base_user=json["base"]["user"],
         head_ref=json["head"]["ref"],
         head_sha=json["head"]["sha"],
-        head_repo_url=json["head"]["repo"]["clone_url"],
+        head_repo_url=repo["clone_url"],
         comments_href=json["_links"]["comments"]["href"],
     )
 
@@ -134,6 +140,8 @@ def mergeable_pull_requests(trigger_word, request_info):
     if prs:
         for pr in prs:
             pr_info = make_pull_request_info(pr)
+            if pr_info is None:
+                continue
             comments = get_pull_request_comments(
                 pr_info.comments_href,
                 request_info
