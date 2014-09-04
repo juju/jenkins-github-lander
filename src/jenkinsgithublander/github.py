@@ -109,8 +109,14 @@ def get_pull_request(number, request_info):
 def get_pull_request_comments(url, request_info):
     # The url already starts with https://api...
     url = _build_url(url, request_info)
-    resp = requests.get(url)
-    return _json_resp(resp)
+    comments = []
+    while True:
+        resp = requests.get(url)
+        comments.extend(_json_resp(resp))
+        if "next" not in resp.links:
+            break
+        url = resp.links["next"]["url"]
+    return comments
 
 
 def make_pull_request_info(json):

@@ -9,6 +9,7 @@ from jenkinsgithublander import (
 )
 from jenkinsgithublander.github import (
     get_open_pull_requests,
+    get_pull_request_comments,
     GithubInfo,
     GithubError,
     make_pull_request_info,
@@ -120,6 +121,57 @@ class TestGithubHelpers(TestCase):
                 '/repos/CanonicalJS/juju-gui/issues/5/comments',
             )
         )
+
+    @responses.activate
+    def test_get_pull_request_comments(self):
+        url = "https://api.testing/juju/project/issues/1/comments"
+        json_comments = [{"body": "a comment"}]
+        responses.add(
+            responses.GET,
+            url,
+            body=json.dumps(json_comments),
+            status=200,
+            content_type='application/json'
+        )
+
+        info = GithubInfo('juju', 'project', 'jujugui', None)
+        comments = get_pull_request_comments(url, info)
+
+        self.assertEqual(json_comments, comments)
+
+    @responses.activate
+    def test_get_pull_request_comments_multipage(self):
+        """Check multiple pages of comments are fetched using Link header"""
+        url = "https://api.testing/juju/project/issues/2/comments"
+        page_1_comments = [{"body": "a page 1 comment"}]
+        page_2_comments = [{"body": "a page 2 comment"}]
+        responses.add(
+            responses.GET,
+            url,
+            body=json.dumps(page_1_comments),
+            status=200,
+            content_type='application/json',
+            match_querystring=True,
+            adding_headers={"Link":
+                '<{url}?p=2>; rel="next", '
+                '<{url}?p=2>; rel="last"'.format(url=url)},
+        )
+        responses.add(
+            responses.GET,
+            url + "?p=2",
+            body=json.dumps(page_2_comments),
+            status=200,
+            content_type='application/json',
+            match_querystring=True,
+            adding_headers={"Link":
+                '<{url}>; rel="first", '
+                '<{url}>; rel="prev"'.format(url=url)},
+        )
+
+        info = GithubInfo('juju', 'project', 'jujugui', None)
+        comments = get_pull_request_comments(url, info)
+
+        self.assertEqual(page_1_comments + page_2_comments, comments)
 
     @responses.activate
     def test_no_mergeable_pull_requests(self):
