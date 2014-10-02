@@ -85,6 +85,18 @@ def _json_resp(response):
         raise GithubError(response.content)
 
 
+def _get_paginated_results(url):
+    """Return concatenated list of json from all pages based on given url."""
+    results = []
+    while True:
+        resp = requests.get(url)
+        results.extend(_json_resp(resp))
+        if "next" not in resp.links:
+            break
+        url = resp.links["next"]["url"]
+    return results
+
+
 def get_open_pull_requests(request_info):
     """Return the list of open pull requests on the given project.
 
@@ -94,7 +106,7 @@ def get_open_pull_requests(request_info):
     path = "/repos/{owner}/{project}/pulls"
     url = _build_url(path, request_info)
     resp = requests.get(url)
-    return _json_resp(resp)
+    return _get_paginated_results(url)
 
 
 def get_pull_request(number, request_info):
@@ -109,14 +121,7 @@ def get_pull_request(number, request_info):
 def get_pull_request_comments(url, request_info):
     # The url already starts with https://api...
     url = _build_url(url, request_info)
-    comments = []
-    while True:
-        resp = requests.get(url)
-        comments.extend(_json_resp(resp))
-        if "next" not in resp.links:
-            break
-        url = resp.links["next"]["url"]
-    return comments
+    return _get_paginated_results(url)
 
 
 def make_pull_request_info(json):
