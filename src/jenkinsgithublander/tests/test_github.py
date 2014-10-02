@@ -123,6 +123,40 @@ class TestGithubHelpers(TestCase):
         )
 
     @responses.activate
+    def test_open_pull_requests_multipage(self):
+        """Check multiple pull requests pages are fetched using Link header"""
+        url = "https://api.github.com/repos/juju/project/pulls"
+        page_1_prs = [{"number": 812}, {"number": 804}]
+        page_2_prs = [{"number": 576}]
+        responses.add(
+            responses.GET,
+            url,
+            body=json.dumps(page_1_prs),
+            status=200,
+            content_type='application/json',
+            match_querystring=True,
+            adding_headers={"Link":
+                '<{url}?p=2>; rel="next", '
+                '<{url}?p=2>; rel="last"'.format(url=url)},
+        )
+        responses.add(
+            responses.GET,
+            url + "?p=2",
+            body=json.dumps(page_2_prs),
+            status=200,
+            content_type='application/json',
+            match_querystring=True,
+            adding_headers={"Link":
+                '<{url}>; rel="first", '
+                '<{url}>; rel="prev"'.format(url=url)},
+        )
+
+        info = GithubInfo('juju', 'project', 'jujugui', None)
+        open_requests = get_open_pull_requests(info)
+
+        self.assertEqual(page_1_prs + page_2_prs, open_requests)
+
+    @responses.activate
     def test_get_pull_request_comments(self):
         url = "https://api.testing/juju/project/issues/1/comments"
         json_comments = [{"body": "a comment"}]
