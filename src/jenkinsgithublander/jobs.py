@@ -1,3 +1,4 @@
+from jenkinsgithublander import logger
 from jenkinsgithublander.github import (
     get_pull_request,
     GithubError,
@@ -25,8 +26,10 @@ def kick_mergeable_pull_requests(config):
     :return kicked: The list of pull requests that were kicked.
 
     """
+    log = logger.getLogger()
     kicked = []
     for project, merge_job in config['projects'].iteritems():
+        log.debug("Checking {}, {}".format(project, merge_job))
         github_info = GithubInfo(
             config['github.owner'],
             project,
@@ -40,6 +43,7 @@ def kick_mergeable_pull_requests(config):
         )
 
         if mergable:
+            log.debug("  mergeable: {}".format(len(mergable)))
             jenkins_info = JenkinsInfo(
                 config['jenkins.merge.url'],
                 merge_job,
@@ -47,6 +51,7 @@ def kick_mergeable_pull_requests(config):
             )
 
             for pr in mergable:
+                log.debug("    pr: {}".format(pr))
                 try:
                     kick_jenkins_merge(pr, jenkins_info)
                     kick_message = 'Kicking {} pull request: {} at sha {}'

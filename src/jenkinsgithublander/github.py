@@ -5,7 +5,7 @@ import requests
 from textwrap import dedent
 
 from jenkinsgithublander import LanderError
-
+from jenkinsgithublander import logger
 
 API_URL = 'https://api.github.com'
 GithubInfo = namedtuple(
@@ -50,6 +50,7 @@ def _is_mergeable(comments, owner, trigger, request_info):
     :param request_info: The tuple of info to make a valid api request.
 
     """
+    log = logger.getLogger()
     is_merging = False
     request_merge = False
 
@@ -68,13 +69,15 @@ def _is_mergeable(comments, owner, trigger, request_info):
             is_merging = True
 
         # Reset the status if a requested merge failed.
-        if is_merging and MERGE_FAILED in comment['body']:
-            request_merge = False
-            is_merging = False
-
-    if request_merge and not is_merging:
-        return True
-    return False
+        if is_merging:
+            if MERGE_FAILED in comment['body']:
+                request_merge = False
+                is_merging = False
+            else:
+                log.debug("    PR is already merging")
+    if not request_merge:
+        log.debug("    No request for merge")
+    return request_merge and not is_merging
 
 
 def _json_resp(response):
@@ -145,24 +148,29 @@ def make_pull_request_info(json):
 
 def mergeable_pull_requests(trigger_word, request_info):
     """Find the links to the issue comments where a command to merge lives."""
+    log = logger.getLogger()
     prs = get_open_pull_requests(request_info)
     mergable_prs = []
 
     if prs:
         for pr in prs:
+            log.debug("  Checking PR {}".format(pr['number']))
             pr_info = make_pull_request_info(pr)
             if pr_info is None:
+                log.debug("    Cannot get PR info")
                 continue
             comments = get_pull_request_comments(
                 pr_info.comments_href,
-                request_info
+                request_info,
             )
 
             if comments:
                 owner = pr_info.base_user
-                if _is_mergeable(comments, owner, trigger_word, request_info):
+                if _is_mergeable(
+                        comments, owner, trigger_word, request_info):
                     mergable_prs.append(pr_info)
-
+            else:
+                log.debug("    No comments")
     return mergable_prs
 
 
@@ -171,7 +179,7 @@ def merge_pull_request(pr_number, jenkins_url, request_info):
     merge_url = "/repos/{owner}/{project}/pulls/{pr_number}/merge"
     pr = get_pull_request(pr_number, request_info)
     url = _build_url(merge_url, request_info, {
-        'pr_number': pr_number
+        'pr_number': pr_number,
     })
 
     commit_message = pr['title'].strip()
@@ -235,12 +243,15 @@ def pull_request_kicked(pr_info, jenkins_url, request_info):
 
 def user_is_in_org(user, org, request_info):
     """Check if a user is in a specific org."""
+    log = logger.getLogger()
     path = '/users/{0}/orgs'.format(user)
     url = _build_url(path, request_info)
     resp = _json_resp(requests.get(url))
-
-    for org_found in resp:
-        if org_found['login'] == org:
-            return True
-
+    orgs = [o['login'] for o in resp]
+    if org in orgs:
+        return True
+    log.debug("    user {} not in {}".format(user, org))
+    log.debug("    user's orgs: {}".format(orgs))
+    log.debug("    Ensure {}'s membership in {} is public".format(
+            user,org))
     return False

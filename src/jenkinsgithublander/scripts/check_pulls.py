@@ -1,8 +1,10 @@
 import argparse
 from ConfigParser import ConfigParser
-from os import path
+import os
+import logging
 
 from jenkinsgithublander import VERSION
+from jenkinsgithublander import logger
 from jenkinsgithublander.jobs import kick_mergeable_pull_requests
 from jenkinsgithublander.utils import build_config
 
@@ -31,12 +33,17 @@ def parse_args():
         help='Path to the ini file containing the jenkins and github config.'
     )
 
+    parser.add_argument(
+        '-d', '--debug',
+        action='store_true',
+        help='Enable debug logging')
+
     return parser.parse_args()
 
 
 def parse_config(ini):
 
-    if not path.exists(ini):
+    if not os.path.exists(ini):
         raise Exception('Ini file not found: ' + ini)
 
     cfg = ConfigParser()
@@ -58,6 +65,11 @@ def run(args, config):
 
 def main():
     args = parse_args()
+
+    if args.debug:
+        logname = __name__.split('.')[-1]
+        logger.setup_custom_logger(logname, logging.DEBUG)
+
     cfg = parse_config(args.ini)
     run(args, cfg)
 
