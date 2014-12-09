@@ -15,7 +15,8 @@ from jenkinsgithublander.jenkins import (
 class TestJenkinsHelpers(TestCase):
 
     def get_pr_info(self):
-        return PullRequestInfo(4, "master", "auser", "abranch", "sha1232",
+        return PullRequestInfo(
+            4, "master", "auser", "abranch", "sha1232",
             "https://git.test", None)
 
     def test_generate_build_url(self):

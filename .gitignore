@@ -12,6 +12,7 @@ dist
 include
 lib
 local
+man
 
 development.ini
 *~
