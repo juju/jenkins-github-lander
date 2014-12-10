@@ -135,9 +135,9 @@ class TestGithubHelpers(TestCase):
             status=200,
             content_type='application/json',
             match_querystring=True,
-            adding_headers={"Link":
-                '<{url}?p=2>; rel="next", '
-                '<{url}?p=2>; rel="last"'.format(url=url)},
+            adding_headers={
+                "Link": '<{url}?p=2>; rel="next", <{url}?p=2>; '
+                'rel="last"'.format(url=url)},
         )
         responses.add(
             responses.GET,
@@ -146,7 +146,8 @@ class TestGithubHelpers(TestCase):
             status=200,
             content_type='application/json',
             match_querystring=True,
-            adding_headers={"Link":
+            adding_headers={
+                "Link":
                 '<{url}>; rel="first", '
                 '<{url}>; rel="prev"'.format(url=url)},
         )
@@ -186,7 +187,8 @@ class TestGithubHelpers(TestCase):
             status=200,
             content_type='application/json',
             match_querystring=True,
-            adding_headers={"Link":
+            adding_headers={
+                "Link":
                 '<{url}?p=2>; rel="next", '
                 '<{url}?p=2>; rel="last"'.format(url=url)},
         )
@@ -197,7 +199,8 @@ class TestGithubHelpers(TestCase):
             status=200,
             content_type='application/json',
             match_querystring=True,
-            adding_headers={"Link":
+            adding_headers={
+                "Link":
                 '<{url}>; rel="first", '
                 '<{url}>; rel="prev"'.format(url=url)},
         )
@@ -239,7 +242,7 @@ class TestGithubHelpers(TestCase):
         comments = load_data('github-pull-request-comments.json')
 
         # Remove the CanonicalJS group so that the user fails to be in the
-        #org.
+        # org.
         orgs.pop(0)
 
         responses.add(
@@ -328,8 +331,9 @@ class TestGithubHelpers(TestCase):
         comments = load_data('github-pull-request-comments.json')
 
         self.add_user_orgs_response("mitechie")
-        self.add_open_pulls_response("CanonicalJS", "juju-gui",
-                                     json_file="github-open-pulls-deleted-branch.json")
+        self.add_open_pulls_response(
+            "CanonicalJS", "juju-gui",
+            json_file="github-open-pulls-deleted-branch.json")
         responses.add(
             responses.GET,
             (
@@ -377,8 +381,10 @@ class TestGithubHelpers(TestCase):
         self.assertEqual(len(responses.calls), 2)
         self.assertEqual(responses.calls[0].request.method, "GET")
         self.assertEqual(responses.calls[1].request.method, "PUT")
-        self.assertEqual(responses.calls[1].request.body,
-                         '{"commit_message": "Update hacking\\n\\nhere are the changes requested."}')
+        self.assertEqual(
+            responses.calls[1].request.body,
+            '{"commit_message": "Update hacking\\n\\n'
+            'here are the changes requested."}')
 
         self.assertEqual(True, result['merged'])
         self.assertEqual("Pull Request successfully merged", result['message'])
@@ -523,7 +529,8 @@ class TestGithubHelpers(TestCase):
 
     @responses.activate
     def test_requeue_after_fail_pending(self):
-        comments = load_data('github-pull-request-comments-requeue.json',
+        comments = load_data(
+            'github-pull-request-comments-requeue.json',
             load_json=True)
         # Remove the last comment, which is the second $$merge$$ marker
         comments.pop()

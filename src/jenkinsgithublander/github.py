@@ -108,7 +108,7 @@ def get_open_pull_requests(request_info):
     """
     path = "/repos/{owner}/{project}/pulls"
     url = _build_url(path, request_info)
-    resp = requests.get(url)
+    requests.get(url)
     return _get_paginated_results(url)
 
 
@@ -253,5 +253,5 @@ def user_is_in_org(user, org, request_info):
     log.debug("    user {} not in {}".format(user, org))
     log.debug("    user's orgs: {}".format(orgs))
     log.debug("    Ensure {}'s membership in {} is public".format(
-            user,org))
+        user, org))
     return False

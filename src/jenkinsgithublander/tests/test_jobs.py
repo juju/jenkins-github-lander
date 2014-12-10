@@ -183,7 +183,8 @@ class TestJobs(TestCase):
 
         fake_config = self._get_fake_config()
 
-        self.assertRaisesRegexp(GithubError, "^Failed to merge: ",
+        self.assertRaisesRegexp(
+            GithubError, "^Failed to merge: ",
             do_merge_pull_request,
             'juju-gui-merge',
             pull_request,

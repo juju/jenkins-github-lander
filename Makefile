@@ -44,10 +44,10 @@ run: develop $(INI)
 	bin/pserve development.ini
 
 .PHONY: test
-test:
+test: all lint
 	bin/nosetests -x -s src/
 
-bin/flake8:
+bin/flake8: venv
 	bin/pip install flake8
 
 .PHONY: lint
