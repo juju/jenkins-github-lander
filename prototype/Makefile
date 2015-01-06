@@ -2,7 +2,7 @@
 WD := $(shell pwd)
 PY := bin/python
 PIP := bin/pip
-
+DEPS_CANARY := lib/.DEPS_CANARY
 
 # #######
 # INSTALL
@@ -18,13 +18,17 @@ bin/python:
 clean_venv:
 	rm -rf bin include lib local man share
 
-deps: venv
+
+deps: $(DEPS_CANARY)
+$(DEPS_CANARY): | venv
 	bin/pip install -r requirements.txt
+	touch $(DEPS_CANARY)
 
 develop:
 	bin/python jenkinsmerger/setup.py develop
 
-run:
+.PHONY: devrun
+devrun:
 	cd jenkinsmerge
 	../bin/pserve development.ini
 
@@ -40,3 +44,7 @@ clean_all: clean_venv
 .PHONY: run
 run:
 	paster
+
+.PHONY: test
+test:	deps
+	bin/nosetests -x -s jenkinsmerger

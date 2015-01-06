@@ -17,6 +17,20 @@ from jenkinsgithublander.jenkins import (
 )
 
 
+def get_jenkins_auth(config):
+    """Get the jenkins lander authorization from config.
+
+    Returned as a tuple (user, password).
+    If values are not set, return None.
+    """
+    auth = None
+    jenkins_auth_user = config.get('jenkins.merge.user')
+    jenkins_auth_password = config.get('jenkins.merge.password')
+    if jenkins_auth_user and jenkins_auth_password:
+        auth = (jenkins_auth_user, jenkins_auth_password)
+    return auth
+
+
 def kick_mergeable_pull_requests(config):
     """Check github for pull requests that include the merge command.
 
@@ -48,6 +62,7 @@ def kick_mergeable_pull_requests(config):
                 config['jenkins.merge.url'],
                 merge_job,
                 config['jenkins.merge.token'],
+                get_jenkins_auth(config),
             )
 
             for pr in mergable:
@@ -85,7 +100,7 @@ def mark_pull_request_build_failed(job_name, pr, build_number, failure_message,
 
     :param job_name: The Jenkins ENV var for $JOB_NAME
     :param pr: The pull request number from the parameterized build.
-    :param build_nubmer: The jenkins build number.
+    :param build_number: The jenkins build number.
 
     """
     # Find the project by matching up the job_name from the Jenkins build.
@@ -104,6 +119,7 @@ def mark_pull_request_build_failed(job_name, pr, build_number, failure_message,
         config['jenkins.merge.url'],
         job_name,
         config['jenkins.merge.token'],
+        None,
     )
 
     pull_request = get_pull_request(pr, github_info)
@@ -140,13 +156,14 @@ def do_merge_pull_request(job_name, pr, build_number, config):
         config['jenkins.merge.url'],
         job_name,
         config['jenkins.merge.token'],
+        get_jenkins_auth(config),
     )
 
     build_url = generate_build_url(build_number, jenkins_info)
     result = merge_pull_request(
         pr,
         build_url,
-        github_info
+        github_info,
     )
     if result.get("merged", False):
         return result['message']

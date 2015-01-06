@@ -5,9 +5,10 @@ from unittest import TestCase
 
 from jenkinsgithublander.github import GithubError
 from jenkinsgithublander.jobs import (
+    do_merge_pull_request,
+    get_jenkins_auth,
     kick_mergeable_pull_requests,
     mark_pull_request_build_failed,
-    do_merge_pull_request,
 )
 from jenkinsgithublander.utils import build_config
 from jenkinsgithublander.tests.utils import load_data
@@ -25,6 +26,8 @@ class TestJobs(TestCase):
             'jenkins.merge.job': 'juju-gui-merge',
             'jenkins.merge.token': 'buildme',
             'jenkins.merge.trigger': '$$merge$$',
+            'jenkins.merge.user': 'lander',
+            'jenkins.merge.password': 'shazam',
         }
         return build_config(fake_config)
 
@@ -95,7 +98,7 @@ class TestJobs(TestCase):
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5',
             body=json.dumps(pull_data),
             status=200,
-            content_type='application/json'
+            content_type='application/json',
         )
         responses.add(
             responses.POST,
@@ -115,9 +118,8 @@ class TestJobs(TestCase):
             pull_request,
             build_number,
             'build Failed',
-            fake_config
+            fake_config,
         )
-
         self.assertTrue(resp.startswith('https://api.github.com'))
 
     @responses.activate
@@ -134,7 +136,7 @@ class TestJobs(TestCase):
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5',
             body=json.dumps(pull_request_data),
             status=200,
-            content_type='application/json'
+            content_type='application/json',
         )
         # Will need to mock out the pull request get, the comment response.
         responses.add(
@@ -142,7 +144,7 @@ class TestJobs(TestCase):
             'https://api.github.com/repos/CanonicalJS/juju-gui/pulls/5/merge',
             body=merged,
             status=200,
-            content_type='application/json'
+            content_type='application/json',
         )
 
         fake_config = self._get_fake_config()
@@ -151,7 +153,7 @@ class TestJobs(TestCase):
             'juju-gui-merge',
             pull_request,
             build_number,
-            fake_config
+            fake_config,
         )
 
         self.assertEqual('Pull Request successfully merged', resp)
@@ -180,7 +182,6 @@ class TestJobs(TestCase):
             status=200,
             content_type='application/json'
         )
-
         fake_config = self._get_fake_config()
 
         self.assertRaisesRegexp(
@@ -189,5 +190,22 @@ class TestJobs(TestCase):
             'juju-gui-merge',
             pull_request,
             build_number,
-            fake_config
+            fake_config,
         )
+
+    def test_get_jenkins_auth(self):
+        fake_config = self._get_fake_config()
+        auth = get_jenkins_auth(fake_config)
+        self.assertEqual(auth, ('lander', 'shazam'))
+
+    def test_get_jenkins_auth_no_user(self):
+        fake_config = self._get_fake_config()
+        fake_config['jenkins.merge.user'] = ''
+        auth = get_jenkins_auth(fake_config)
+        self.assertIsNone(auth)
+
+    def test_get_jenkins_auth_no_password(self):
+        fake_config = self._get_fake_config()
+        fake_config['jenkins.merge.password'] = ''
+        auth = get_jenkins_auth(fake_config)
+        self.assertIsNone(auth)

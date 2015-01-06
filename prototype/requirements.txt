@@ -1,3 +1,4 @@
 pyramid
 requests
-
+nose
+nose-selecttests
