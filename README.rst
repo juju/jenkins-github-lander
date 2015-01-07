@@ -14,11 +14,11 @@ Process
   the Github pull request builder plugin)
 - Once code receives a LGTM, the author places a keyword "$$merge$$" into a
   final comment on the pull request.
-- This webservice, via a hook notification Github, catches this and triggers a
+- This webservice, via a hook notification from Github, triggers a
   merge job in jenkins.
 - If all tests pass, the Jenkins server will ping back that this pull request
   is good and passes all tests.
-- This web service then triggers a merge via the Github api to land the branch.
+- This web service then triggers a merge via the Github API to land the branch.
 
 
 Install on Jenkins Server

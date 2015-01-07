@@ -4,6 +4,9 @@ PY := bin/python
 
 INI = development.ini
 
+DEPS_CANARY := lib/.DEPS_CANARY
+TESTDEPS_CANARY := lib/.TESTDEPS_CANARY
+
 # #######
 # INSTALL
 # #######
@@ -22,16 +25,22 @@ clean_venv:
 	rm -rf bin include lib local man share
 
 .PHONY: deps
-deps: venv
+deps: $(DEPS_CANARY)
+$(DEPS_CANARY): | venv
 	bin/pip install -r requirements.txt
+	touch $(DEPS_CANARY)
 
 .PHONY: testdeps
-testdeps: deps
+testdeps: $(TESTDEPS_CANARY)
+$(TESTDEPS_CANARY): | deps
 	bin/pip install -r requirements.tests.txt
+	touch $(TESTDEPS_CANARY)
 
-lib/python*/site-packages/jenkins_github_lander.egg-link:
+EGG := lib/python2.7/site-packages/jenkins-github-lander.egg-link
+$(EGG):
 	bin/python setup.py develop
-develop: venv lib/python*/site-packages/jenkins_github_lander.egg-link
+
+develop: venv $(EGG)
 
 .PHONY: clean_all
 clean_all: clean_venv
@@ -43,11 +52,14 @@ clean_all: clean_venv
 run: develop $(INI)
 	bin/pserve development.ini
 
+.PHONY: check
+check: all testdeps lint test
+
 .PHONY: test
-test: all lint
+test:
 	bin/nosetests -x -s src/
 
-bin/flake8: venv
+bin/flake8: bin/python
 	bin/pip install flake8
 
 .PHONY: lint

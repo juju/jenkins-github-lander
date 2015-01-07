@@ -1,3 +1,4 @@
+import base64
 import responses
 from unittest import TestCase
 
@@ -24,7 +25,9 @@ class TestJenkinsHelpers(TestCase):
         info = JenkinsInfo(
             'http://jenkins.com/job/{}',
             'juju-gui',
-            '1234')
+            '1234',
+            None,
+        )
 
         self.assertEqual(
             'http://jenkins.com/job/juju-gui/5',
@@ -35,7 +38,9 @@ class TestJenkinsHelpers(TestCase):
         info = JenkinsInfo(
             'http://jenkins.com/job/{}',
             'juju-gui',
-            '1234')
+            '1234',
+            None,
+        )
 
         self.assertEqual(
             'http://jenkins.com/job/juju-gui',
@@ -46,7 +51,9 @@ class TestJenkinsHelpers(TestCase):
         info = JenkinsInfo(
             'http://jenkins.com/job/{}',
             'juju-gui',
-            '1234')
+            '1234',
+            None,
+            )
 
         self.assertEqual(
             'http://jenkins.com/job/juju-gui/buildWithParameters',
@@ -60,11 +67,15 @@ class TestJenkinsHelpers(TestCase):
             'http://jenkins.com/job/nope/buildWithParameters',
             body='{"error": "not found"}',
             status=404,
-            content_type='application/json'
+            content_type='application/json',
         )
 
         info = JenkinsInfo(
-            'http://jenkins.com/job/{}', 'nope', '1234')
+            'http://jenkins.com/job/{}',
+            'nope',
+            '1234',
+            None,
+        )
         pr_info = self.get_pr_info()
         self.assertRaises(JenkinsError, kick_jenkins_merge, pr_info, info)
 
@@ -75,13 +86,40 @@ class TestJenkinsHelpers(TestCase):
             'http://jenkins.com/job/one/buildWithParameters',
             body='',
             status=200,
-            content_type='application/json'
+            content_type='application/json',
         )
 
         info = JenkinsInfo(
-            'http://jenkins.com/job/{}', 'one', '1234')
+            'http://jenkins.com/job/{}',
+            'one',
+            '1234',
+            None,
+        )
         result = kick_jenkins_merge(self.get_pr_info(), info)
+        self.assertNotIn('Authorization', responses.calls[0].request.headers)
+        self.assertIsNone(result)
 
+    @responses.activate
+    def test_kick_jenkins_merge_auth(self):
+        responses.add(
+            responses.POST,
+            'http://jenkins.com/job/one/buildWithParameters',
+            body='',
+            status=200,
+            content_type='application/json',
+        )
+        auth_tuple = ('a', 'b')
+        info = JenkinsInfo(
+            'http://jenkins.com/job/{}',
+            'one',
+            '1234',
+            auth_tuple,
+        )
+        result = kick_jenkins_merge(self.get_pr_info(), info)
+        auth = responses.calls[0].request.headers['Authorization']
+        type_, encoded = auth.split()
+        self.assertEqual('Basic', type_)
+        self.assertEqual(':'.join(auth_tuple), base64.b64decode(encoded))
         self.assertIsNone(result)
 
     @responses.activate
@@ -91,11 +129,15 @@ class TestJenkinsHelpers(TestCase):
             'http://jenkins.com/job/one/buildWithParameters',
             body='',
             status=201,
-            content_type='application/json'
+            content_type='application/json',
         )
 
         info = JenkinsInfo(
-            'http://jenkins.com/job/{}', 'one', '1234')
+            'http://jenkins.com/job/{}',
+            'one',
+            '1234',
+            None,
+        )
         result = kick_jenkins_merge(self.get_pr_info(), info)
 
         self.assertIsNone(result)
@@ -111,6 +153,10 @@ class TestJenkinsHelpers(TestCase):
         )
 
         info = JenkinsInfo(
-            'http://jenkins.com/job/{}', 'one', '1234')
+            'http://jenkins.com/job/{}',
+            'one',
+            '1234',
+            None,
+        )
         pr_info = self.get_pr_info()
         self.assertRaises(JenkinsError, kick_jenkins_merge, pr_info, info)

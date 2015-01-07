@@ -5,7 +5,7 @@ import requests
 
 JenkinsInfo = namedtuple(
     'JenkinsInfo',
-    ['url', 'job', 'token'])
+    ['url', 'job', 'token', 'auth'])
 
 
 class JenkinsError(Exception):
@@ -40,7 +40,7 @@ def kick_jenkins_merge(pr_info, jenkins_info):
         'token': jenkins_info.token,
     }
 
-    resp = requests.post(url, request_data)
+    resp = requests.post(url, request_data, auth=jenkins_info.auth)
     try:
         resp.raise_for_status()
     except requests.exceptions.HTTPError:

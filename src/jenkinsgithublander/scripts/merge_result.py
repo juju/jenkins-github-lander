@@ -17,7 +17,7 @@ from jenkinsgithublander import (
 )
 from jenkinsgithublander.jobs import (
     mark_pull_request_build_failed,
-    do_merge_pull_request
+    do_merge_pull_request,
 )
 from jenkinsgithublander.utils import build_config
 
